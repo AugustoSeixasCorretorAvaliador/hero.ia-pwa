@@ -80,12 +80,21 @@
 
 <script>
   const DEFAULT_API_BASE = "https://hero-ia-backend.onrender.com";
+  const DEFAULT_USER_KEY = "2ed2a50c-5a48-4cb3-b06b-4b6240a8d0b1";
 
   function getApiBase() {
     return (
       window.HERO_API_BASE ||
       localStorage.getItem("hero_api_base") ||
       DEFAULT_API_BASE
+    );
+  }
+
+  function getUserKey() {
+    return (
+      window.HERO_USER_KEY ||
+      localStorage.getItem("hero_user_key") ||
+      DEFAULT_USER_KEY
     );
   }
 
@@ -127,7 +136,10 @@
     try {
       const res = await fetch(`${getApiBase()}/whatsapp/draft`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "x-user-key": getUserKey()
+        },
         body: JSON.stringify({ message: msg })
       });
 
