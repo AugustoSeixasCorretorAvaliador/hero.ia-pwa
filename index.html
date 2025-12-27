@@ -67,6 +67,8 @@
 
   <button id="gerarBtn">HERO.IA – GERAR RASCUNHO</button>
 
+  <img id="preview" class="preview-image" src="assets/img/foto1.jpg" alt="Pré-visualização" loading="lazy" style="display:block; width:100%; max-width:640px; margin:12px auto; border-radius:12px; border:1px solid #ddd; background:#e2e8f0; object-fit:cover;">
+
   <div id="resultadoBox" style="display:none;"></div>
 
   <button id="copyBtn">📋 Copiar rascunho</button>
@@ -88,9 +90,19 @@
   }
 
   function copyToClipboard(text) {
+    if (!text) return;
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).catch(() => fallbackCopy(text));
+    } else {
+      fallbackCopy(text);
+    }
+  }
+
+  function fallbackCopy(text) {
     const textarea = document.createElement("textarea");
     textarea.value = text;
     textarea.style.position = "fixed";
+    textarea.style.opacity = "0";
     document.body.appendChild(textarea);
     textarea.focus();
     textarea.select();
@@ -119,8 +131,47 @@
         body: JSON.stringify({ message: msg })
       });
 
+      if (!res.ok) {
+        resultadoBox.innerText = `Erro ${res.status}: não foi possível gerar o rascunho.`;
+        return;
+      }
+
       const data = await res.json();
-      const textoFinal = data.resposta || "";
+
+      let textoFinal = "";
+
+      if (data.draft) {
+        // Pode vir string JSON ou string simples
+        try {
+          const parsed = typeof data.draft === "string" ? JSON.parse(data.draft) : data.draft;
+          if (parsed && typeof parsed === "object") {
+            const lines = [];
+            if (parsed.resposta) lines.push(parsed.resposta);
+            if (Array.isArray(parsed.empreendimentos) && parsed.empreendimentos.length > 0) {
+              lines.push("\nEmpreendimentos:");
+              parsed.empreendimentos.forEach((e, i) => {
+                const nome = e.nome || "";
+                const bairro = e.bairro || "";
+                const tipologias = e.tipologias || e.tipologia || "";
+                const entrega = e.entrega || "";
+                lines.push(`${i + 1}) ${nome} — ${bairro} — Tipologias: ${tipologias} — ${entrega}`);
+              });
+            }
+            textoFinal = lines.join("\n").trim();
+          } else {
+            textoFinal = String(data.draft || "").trim();
+          }
+        } catch (err) {
+          textoFinal = String(data.draft || "").trim();
+        }
+      } else if (data.resposta) {
+        textoFinal = data.resposta;
+      }
+
+      if (!textoFinal) {
+        resultadoBox.innerText = "Nenhum rascunho retornado.";
+        return;
+      }
 
       resultadoBox.innerText = textoFinal;
 
