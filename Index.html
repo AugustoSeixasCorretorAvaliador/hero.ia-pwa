@@ -1,0 +1,126 @@
+
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>HERO.IA – Rascunho</title>
+  <meta name="theme-color" content="#0E2A47">
+  <style>
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      margin: 0;
+      padding: 24px;
+      background: #f8fafc;
+      color: #0f172a;
+      display: flex;
+      justify-content: center;
+    }
+    .shell {
+      width: 100%;
+      max-width: 640px;
+    }
+    h1 {
+      font-size: 22px;
+      margin-bottom: 8px;
+      text-align: center;
+    }
+    p {
+      text-align: center;
+      margin-bottom: 12px;
+    }
+    textarea {
+      width: 100%;
+      min-height: 140px;
+      padding: 12px;
+      font-size: 15px;
+      border-radius: 12px;
+      border: 2px solid #2563eb;
+      margin-bottom: 12px;
+    }
+    button {
+      width: 100%;
+      padding: 14px;
+      font-size: 16px;
+      font-weight: 700;
+      color: #fff;
+      background: #2563eb;
+      border: none;
+      border-radius: 14px;
+      margin-bottom: 12px;
+    }
+    .out {
+      margin-top: 16px;
+      padding: 12px;
+      background: #fff;
+      border-radius: 12px;
+      border: 1px solid #cbd5e1;
+      white-space: pre-wrap;
+    }
+    .preview-image {
+      display: block;
+      max-width: 100%;
+      height: auto;
+      margin: 0 auto 16px;
+      border-radius: 12px;
+      border: 1px solid #cbd5e1;
+      background: #e2e8f0;
+      object-fit: cover;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="shell">
+    <h1>HERO.IA – Gerar Rascunho</h1>
+    <p>Cole a mensagem do cliente:</p>
+
+    <textarea id="input"></textarea>
+
+    <button onclick="gerar()">HERO.IA – GERAR Rascunho</button>
+
+    <img class="preview-image" src="assets/img/foto1.jpg" alt="Pré-visualização" loading="lazy">
+
+    <div id="output" class="out" style="display:none"></div>
+  </div>
+
+  <script>
+    // Backend base pode ser sobrescrito via window.HERO_API_BASE ou localStorage.hero_api_base
+    const DEFAULT_API_BASE = "https://hero-ia-backend.onrender.com"; // ajuste para a URL real do backend na nuvem
+    const USER_KEY = "2ed2a50c-5a48-4cb3-b06b-4b6240a8d0b1";
+
+    function buildApiUrl(path) {
+      const base = (window.HERO_API_BASE || localStorage.getItem("hero_api_base") || DEFAULT_API_BASE || window.location.origin).replace(/\/$/, "");
+      return `${base}${path}`;
+    }
+
+    const API_URL = buildApiUrl("/whatsapp/draft");
+
+    async function gerar() {
+      const texto = document.getElementById("input").value.trim();
+      if (!texto) return;
+
+      const res = await fetch(API_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-user-key": USER_KEY
+        },
+        body: JSON.stringify({ message: texto })
+      });
+
+      if (res.status === 403) {
+        alert("Acesso suspenso.");
+        return;
+      }
+
+      const data = await res.json();
+      const out = document.getElementById("output");
+      out.style.display = "block";
+      out.textContent = data.draft || "Erro ao gerar rascunho.";
+    }
+  </script>
+
+</body>
+</html>
