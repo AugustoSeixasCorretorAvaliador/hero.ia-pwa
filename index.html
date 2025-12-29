@@ -124,6 +124,9 @@
       return;
     }
 
+    // Enviar somente a última mensagem (string), coerente com a extensão WhatsApp
+    const mensagens = [msg];
+
     const resultadoBox = document.getElementById("resultadoBox");
     const copyBtn = document.getElementById("copyBtn");
 
@@ -138,7 +141,7 @@
           "Content-Type": "application/json",
           "x-user-key": getUserKey()
         },
-        body: JSON.stringify({ message: msg })
+        body: JSON.stringify({ mensagens })
       });
 
       if (!res.ok) {
